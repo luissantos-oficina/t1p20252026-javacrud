@@ -125,6 +125,7 @@ public class App {
                     <table>
                         <tr>
                             <th>ID</th>
+                            <th>Nif</th>
                             <th>Nome</th>
                             <th>Email</th>
                             <th>Telefone</th>
@@ -148,9 +149,11 @@ public class App {
                     String nome = rs.getString("nome");
                     String email = rs.getString("email");
                     String telefone = rs.getString("telefone");
+                    String nifx = rs.getString("nif");
 
                     html.append("<tr>");
                     html.append("<td>").append(id).append("</td>");
+                    html.append("<td>").append(nifx).append("</td>");
                     html.append("<td>").append(nome).append("</td>");
                     html.append("<td>").append(email).append("</td>");
                     html.append("<td>").append(telefone).append("</td>");
@@ -209,6 +212,9 @@ public class App {
                 <a href='/clientes'>← Voltar à lista</a><br><br>
 
                 <form method='POST' action='/guardar'>
+                    NIF:
+                    <input name='nif' required>
+
                     Nome:
                     <input name='nome' required>
 
@@ -252,6 +258,7 @@ public class App {
 
                 String[] params = body.split("&");
 
+                String nif = "";
                 String nome = "";
                 String email = "";
                 String telefone = "";
@@ -264,6 +271,7 @@ public class App {
                         String value = java.net.URLDecoder.decode(kv[1], "UTF-8");
 
                         switch (key) {
+                            case "nif": nif = value; break;
                             case "nome": nome = value; break;
                             case "email": email = value; break;
                             case "telefone": telefone = value; break;
@@ -277,12 +285,13 @@ public class App {
                     throw new Exception("Ligação à BD falhou!");
                 }
 
-                String sql = "INSERT INTO clientes(nome,email,telefone) VALUES (?,?,?)";
+                String sql = "INSERT INTO clientes(nome,nif,email,telefone) VALUES (?,?,?,?)";
                 PreparedStatement ps = con.prepareStatement(sql);
 
                 ps.setString(1, nome);
-                ps.setString(2, email);
-                ps.setString(3, telefone);
+                ps.setString(2, nif);
+                ps.setString(3, email);
+                ps.setString(4, telefone);
 
                 ps.executeUpdate();
 
