@@ -12,7 +12,9 @@ public class App {
             new InetSocketAddress(8080), 0
         );
 
-        /// HOME
+
+
+        /// HOME DA APLICACAO
         server.createContext("/", exchange -> {
             String html = """
                 <html>
@@ -118,6 +120,12 @@ public class App {
 
 
 
+
+
+
+
+
+
         //// LISTA
         server.createContext("/clientes", exchange -> {
 
@@ -201,7 +209,6 @@ public class App {
         });    
 
 
-
         // FORM NOVO CLIENTE
         server.createContext("/novo", exchange -> {
 
@@ -250,7 +257,6 @@ public class App {
             exchange.getResponseBody().write(html.toString().getBytes());
             exchange.close();
         }); 
-
 
 
        // GUARDAR NOVO CLIENTE
@@ -355,7 +361,6 @@ public class App {
         });
 
 
-
         // FORM EDITAR
         server.createContext("/editar", exchange -> {
 
@@ -445,7 +450,6 @@ public class App {
             exchange.getResponseBody().write(html.toString().getBytes());
             exchange.close();
         }); 
-
 
 
         // ATUALIZAR CLIENTE 
@@ -615,6 +619,10 @@ public class App {
       
         
 
+
+
+
+
         //// LISTA DE PRODUTOS
         server.createContext("/produtos", exchange -> {
 
@@ -715,22 +723,19 @@ public class App {
                 </head>
                 <body>
 
-                <h2>Novo Cliente</h2>
+                <h2>Novo Produto</h2>
 
-                <a href='/clientes'>← Voltar à lista</a><br><br>
+                <a href='/produtos'>← Voltar à lista</a><br><br>
 
-                <form method='POST' action='/guardar'>
-                    NIF:
-                    <input name='nif' required>
+                <form method='POST' action='/produtoguardar'>
+                    Ref:
+                    <input name='refproduto' required>
 
-                    Nome:
-                    <input name='nome' required>
+                    Produto:
+                    <input name='produto' required>
 
-                    Email:
-                    <input name='email' type='email' required>
-
-                    Telefone:
-                    <input name='telefone'>
+                    Preço:
+                    <input name='preco' type='text' required >
 
                     <button type='submit'>Guardar</button>
                 </form>
@@ -763,10 +768,9 @@ public class App {
 
                 String[] params = body.split("&");
 
-                String nif = "";
-                String nome = "";
-                String email = "";
-                String telefone = "";
+                String refproduto = "";
+                String produto = "";
+                String preco = "";
 
                 for (String p : params) {
                     String[] kv = p.split("=");
@@ -776,10 +780,9 @@ public class App {
                         String value = java.net.URLDecoder.decode(kv[1], "UTF-8");
 
                         switch (key) {
-                            case "nif": nif = value; break;
-                            case "nome": nome = value; break;
-                            case "email": email = value; break;
-                            case "telefone": telefone = value; break;
+                            case "refproduto": refproduto = value; break;
+                            case "produto": produto = value; break;
+                            case "preco": preco = value; break;
                         }
                     }
                 }
@@ -790,13 +793,12 @@ public class App {
                     throw new Exception("Ligação à BD falhou!");
                 }
 
-                String sql = "INSERT INTO clientes(nome,nif,email,telefone) VALUES (?,?,?,?)";
+                String sql = "INSERT INTO produtos (refproduto, produto, preco) VALUES (?,?,?)";
                 PreparedStatement ps = con.prepareStatement(sql);
 
-                ps.setString(1, nome);
-                ps.setString(2, nif);
-                ps.setString(3, email);
-                ps.setString(4, telefone);
+                ps.setString(1, refproduto);
+                ps.setString(2, produto);
+                ps.setString(3, preco);
 
                 ps.executeUpdate();
 
@@ -815,10 +817,10 @@ public class App {
                     </head>
                     <body>
 
-                    <h2>:-) Cliente guardado com sucesso!</h2>
+                    <h2>:-) Produto guardado com sucesso!</h2>
 
-                    <a href='/clientes'>Ver lista</a><br><br>
-                    <a href='/novo'>Inserir novo cliente</a>
+                    <a href='/produtos'>Ver lista</a><br><br>
+                    <a href='/produtonovo'>Inserir novo produto</a>
 
                     </body>
                     </html>
@@ -834,8 +836,8 @@ public class App {
                     </head>
                     <body>
 
-                    <h2>!! Erro ao guardar cliente!</h2>
-                    <a href='/novo'>Voltar</a>
+                    <h2>!! Erro ao guardar produto!</h2>
+                    <a href='/produtonovo'>Voltar</a>
 
                     </body>
                     </html>
@@ -870,19 +872,19 @@ public class App {
                     throw new Exception("Ligação à BD falhou!");
                 }
 
-                String sql = "SELECT * FROM clientes WHERE id=?";
+                String sql = "SELECT * FROM produtos WHERE id=?";
                 PreparedStatement ps = con.prepareStatement(sql);
                 ps.setInt(1, id);
 
                 ResultSet rs = ps.executeQuery();
 
                 if (!rs.next()) {
-                    throw new Exception("Cliente não encontrado");
+                    throw new Exception("PRoduto não encontrado");
                 }
 
-                String nome = rs.getString("nome");
-                String email = rs.getString("email");
-                String telefone = rs.getString("telefone");
+                String refproduto = rs.getString("refproduto");
+                String produto = rs.getString("produto");
+                String preco = rs.getString("preco");
 
                 html.append("""
                     <html>
@@ -896,18 +898,18 @@ public class App {
                     </head>
                     <body>
 
-                    <h2>Editar Cliente</h2>
+                    <h2>Editar Produto</h2>
 
-                    <a href='/clientes'>« Voltar</a><br><br>
+                    <a href='/produtos'>« Voltar</a><br><br>
 
-                    <form method='POST' action='/atualizar'>
+                    <form method='POST' action='/produtoatualizar'>
                 """);
 
                 html.append("<input type='hidden' name='id' value='").append(id).append("'>");
 
-                html.append("Nome:<input name='nome' value='").append(nome).append("' required>");
-                html.append("Email:<input name='email' value='").append(email).append("' required>");
-                html.append("Telefone:<input name='telefone' value='").append(telefone).append("'>");
+                html.append("Ref:<input name='refproduto' value='").append(refproduto).append("' required>");
+                html.append("PRoduto:<input name='produto' value='").append(produto).append("' required>");
+                html.append("Preç:<input name='preco' value='").append(preco).append("'>");
 
                 html.append("""
                     <button type='submit'>Atualizar</button>
@@ -927,8 +929,8 @@ public class App {
                 html.append("""
                     <html>
                     <body>
-                    <h2>!Erro ao carregar cliente</h2>
-                    <a href='/clientes'>Voltar</a>
+                    <h2>!Erro ao carregar produto</h2>
+                    <a href='/produtos'>Voltar</a>
                     </body>
                     </html>
                 """);
@@ -956,9 +958,9 @@ public class App {
                 String[] params = body.split("&");
 
                 String idStr = "";
-                String nome = "";
-                String email = "";
-                String telefone = "";
+                String refproduto = "";
+                String produto = "";
+                String preco = "";
 
                 for (String p : params) {
                     String[] kv = p.split("=");
@@ -969,9 +971,9 @@ public class App {
 
                         switch (key) {
                             case "id": idStr = value; break;
-                            case "nome": nome = value; break;
-                            case "email": email = value; break;
-                            case "telefone": telefone = value; break;
+                            case "refproduto": refproduto = value; break;
+                            case "produto": produto = value; break;
+                            case "preco": preco = value; break;
                         }
                     }
                 }
@@ -984,12 +986,12 @@ public class App {
                     throw new Exception("Ligação à BD falhou!");
                 }
 
-                String sql = "UPDATE clientes SET nome=?, email=?, telefone=? WHERE id=?";
+                String sql = "UPDATE produtos SET refproduto=?, produto=?, preco=? WHERE id=?";
                 PreparedStatement ps = con.prepareStatement(sql);
 
-                ps.setString(1, nome);
-                ps.setString(2, email);
-                ps.setString(3, telefone);
+                ps.setString(1, refproduto);
+                ps.setString(2, produto);
+                ps.setString(3, preco);
                 ps.setInt(4, id);
 
                 ps.executeUpdate();
@@ -998,7 +1000,7 @@ public class App {
                 con.close();
 
                 // Redirect (melhor UX)
-                exchange.getResponseHeaders().add("Location", "/clientes");
+                exchange.getResponseHeaders().add("Location", "/produtos");
                 exchange.sendResponseHeaders(302, -1);
                 exchange.close();
                 return;
@@ -1009,8 +1011,8 @@ public class App {
                 String resp = """
                     <html>
                     <body>
-                    <h2>!Erro ao atualizar cliente</h2>
-                    <a href='/clientes'>Voltar</a>
+                    <h2>!Erro ao atualizar produto</h2>
+                    <a href='/produtos'>Voltar</a>
                     </body>
                     </html>
                 """;
@@ -1044,7 +1046,7 @@ public class App {
                     throw new Exception("Ligação à BD falhou!");
                 }
 
-                String sql = "DELETE FROM clientes WHERE id=?";
+                String sql = "DELETE FROM produtos WHERE id=?";
                 PreparedStatement ps = con.prepareStatement(sql);
 
                 ps.setInt(1, id);
@@ -1068,13 +1070,13 @@ public class App {
 
                 if (rows > 0) {
                     html.append("""
-                        <h2>Cliente apagado com sucesso!</h2>
-                        <a href='/clientes'>Voltar à lista</a>
+                        <h2>PRoduto apagado com sucesso!</h2>
+                        <a href='/produtos'>Voltar à lista</a>
                     """);
                 } else {
                     html.append("""
-                        <h2>! Cliente não encontrado!</h2>
-                        <a href='/clientes'>Voltar</a>
+                        <h2>! Produto não encontrado!</h2>
+                        <a href='/produtos'>Voltar</a>
                     """);
                 }
 
@@ -1093,8 +1095,8 @@ public class App {
                     </head>
                     <body>
 
-                    <h2>!!! Erro ao apagar cliente!</h2>
-                    <a href='/clientes'>Voltar</a>
+                    <h2>!!! Erro ao apagar produto!</h2>
+                    <a href='/produtos'>Voltar</a>
 
                     </body>
                     </html>
